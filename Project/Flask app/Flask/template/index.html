@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: rgba(255, 255, 255, 0.9); /* Adding a little transparency */
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+        }
+
+        #uploadSection {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #csvFile {
+            margin-bottom: 10px;
+            color: white; /* Change color of selected file name */
+        }
+
+        #csvFile::file-selector-button {
+            color: white; /* Change color of "No file chosen" text */
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: rgba(255, 255, 255, 0.9); /* Adding a little transparency */
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        #accuracy {
+            margin-bottom: 20px;
+        }
+
+        #confusionMatrix {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #confusionMatrixImage {
+            width: 65%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #confusionMatrixExplanation {
+            margin-top: 10px;
+            background-color: rgba(255, 255, 255, 0.8); /* Adding a little transparency */
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sentiment Analysis on News Headlines</h1>
+    <div id="uploadSection">
+        <h4 style="color: white;">Upload your CSV File</h4>
+    </div>
+    <form id="csvForm" enctype="multipart/form-data">
+        <div id="uploadSection">
+            <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
+        </div>
+        <div id="uploadSection">
+            <button type="submit">Upload</button>
+        </div>
+    </form>
+
+    <div id="results">
+        <h2>Results</h2>
+        <p id="accuracy">Accuracy: <span id="accuracyValue">-</span>%</p>
+        <div id="confusionMatrix">
+            <h3>Confusion Matrix</h3>
+            <img id="confusionMatrixImage" src="" alt="Confusion Matrix">
+            <div id="confusionMatrixExplanation">
+                <p>The confusion matrix is a table that is used to evaluate the performance of a classification model. It contains the following values:</p>
+                <ul>
+                    <li><strong>True Positives (TP):</strong> <span id="truePositives">-</span> The number of correct positive predictions.</li>
+                    <li><strong>True Negatives (TN):</strong> <span id="trueNegatives">-</span> The number of correct negative predictions.</li>
+                    <li><strong>False Positives (FP):</strong> <span id="falsePositives">-</span> The number of incorrect positive predictions.</li>
+                    <li><strong>False Negatives (FN):</strong> <span id="falseNegatives">-</span> The number of incorrect negative predictions.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('csvForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('csvFile');
+            formData.append('csvFile', fileInput.files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    return;
+                }
+
+                // Update accuracy value
+                const accuracyPercentage = data.accuracy * 100;
+                document.getElementById('accuracyValue').textContent = accuracyPercentage.toFixed(2);
+
+                // Update confusion matrix image
+                document.getElementById('confusionMatrixImage').src = `/uploads/${data.confusion_matrix}`;
+
+                // Update confusion matrix values
+                document.getElementById('truePositives').textContent = data.true_positives;
+                document.getElementById('trueNegatives').textContent = data.true_negatives;
+                document.getElementById('falsePositives').textContent = data.false_positives;
+                document.getElementById('falseNegatives').textContent = data.false_negatives;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
